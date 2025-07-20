@@ -8,18 +8,25 @@
             </div>
             <div class="card-body pt-3">
                 <form method="GET" class="row g-2 align-items-end mb-4">
-                    <div class="col">
+                    <div class="col-md-4">
                         <label for="tgl_awal" class="form-label mb-0">Tanggal Awal</label>
                         <input type="date" name="tgl_awal" id="tgl_awal" class="form-control" value="{{ $tglAwal }}">
                     </div>
-                    <div class="col">
+                    <div class="col-md-4">
                         <label for="tgl_akhir" class="form-label mb-0">Tanggal Akhir</label>
                         <input type="date" name="tgl_akhir" id="tgl_akhir" class="form-control" value="{{ $tglAkhir }}">
                     </div>
-                    <div class="col-auto mt-3 mt-md-0">
-                        <button class="btn btn-primary"><i class="bx bx-search"></i> Filter</button>
+                    <div class="col-md-4 d-flex gap-2 mt-3 mt-md-0">
+                        <button class="btn btn-primary flex-fill">
+                            <i class="bx bx-search"></i> Filter
+                        </button>
+                        <a href="{{ route('laporan.produk_terlaris_pdf', ['tgl_awal'=>$tglAwal,'tgl_akhir'=>$tglAkhir]) }}"
+                            class="btn btn-danger flex-fill" target="_blank">
+                            <i class="bx bxs-file-pdf"></i> PDF
+                        </a>
                     </div>
                 </form>
+
                 <div class="table-responsive text-nowrap">
                     <table class="table table-bordered table-hover mb-0">
                         <thead class="table-light">

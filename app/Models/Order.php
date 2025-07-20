@@ -42,7 +42,7 @@ class Order extends Model
         return $this->hasOne(Payment::class, 'order_id', 'id');
     }
 
-    // Method untuk mengurangi stok produk ketika order lunas
+    // Method untuk mengurangi stok produk ketika order selesai
     public function reduceProductStock()
     {
         foreach ($this->items as $item) {
@@ -59,13 +59,14 @@ class Order extends Model
                 $product->save();
 
                 // Log untuk tracking
-                Log::info('[Stock Reduction] Product stock reduced', [
+                Log::info('[Stock Reduction] Product stock reduced (Order Completed)', [
                     'product_id' => $product->id,
                     'product_name' => $product->nama_produk,
                     'qty_sold' => $item->qty,
                     'stock_remaining' => $product->stok,
                     'order_id' => $this->id,
-                    'midtrans_order_id' => $this->midtrans_order_id
+                    'midtrans_order_id' => $this->midtrans_order_id,
+                    'trigger' => 'Status changed to selesai'
                 ]);
             }
         }

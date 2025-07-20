@@ -79,4 +79,43 @@ class LaporanController extends Controller
         $pdf = Pdf::loadView('admin.laporan.penjualan_pdf', compact('orders', 'tglAwal', 'tglAkhir', 'total'));
         return $pdf->download('laporan_penjualan_' . $tglAwal . '_sd_' . $tglAkhir . '.pdf');
     }
+
+    // Cetak PDF Pembelian
+    public function pembelianPdf(Request $request)
+    {
+        $tglAwal = $request->get('tgl_awal', now()->format('Y-m-01'));
+        $tglAkhir = $request->get('tgl_akhir', now()->format('Y-m-d'));
+        $purchases = Purchase::whereBetween('tanggal_beli', [$tglAwal, $tglAkhir])
+            ->with(['supplier', 'purchaseItems.product'])
+            ->orderBy('tanggal_beli', 'desc')
+            ->get();
+
+        $total = $purchases->sum('total_beli');
+
+        $pdf = Pdf::loadView('admin.laporan.pembelian_pdf', compact('purchases', 'tglAwal', 'tglAkhir', 'total'));
+        return $pdf->download('laporan_pembelian_' . $tglAwal . '_sd_' . $tglAkhir . '.pdf');
+    }
+
+    // Cetak PDF Produk Terlaris
+    public function produkTerlarisPdf(Request $request)
+    {
+        $tglAwal = $request->get('tgl_awal', now()->format('Y-m-01'));
+        $tglAkhir = $request->get('tgl_akhir', now()->format('Y-m-d'));
+        
+        $produkTerlaris = OrderItem::select('product_id', DB::raw('SUM(qty) as total_terjual'))
+            ->whereHas('order', function ($q) use ($tglAwal, $tglAkhir) {
+                $q->where('status_order', 'selesai')
+                  ->whereBetween('tanggal_order', [$tglAwal, $tglAkhir]);
+            })
+            ->groupBy('product_id')
+            ->orderByDesc('total_terjual')
+            ->with('product.category') // Eager load product dan category
+            ->take(10) // Limit sama dengan view biasa
+            ->get();
+
+        $totalKeseluruhan = $produkTerlaris->sum('total_terjual');
+
+        $pdf = Pdf::loadView('admin.laporan.produk_terlaris_pdf', compact('produkTerlaris', 'tglAwal', 'tglAkhir', 'totalKeseluruhan'));
+        return $pdf->download('laporan_produk_terlaris_' . $tglAwal . '_sd_' . $tglAkhir . '.pdf');
+    }
 }

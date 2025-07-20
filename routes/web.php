@@ -150,7 +150,11 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
     Route::get('produk-terlaris', [LaporanController::class, 'produkTerlaris'])->name('produk_terlaris');
     Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
+    
+    // PDF exports
     Route::get('penjualan/pdf', [LaporanController::class, 'penjualanPdf'])->name('penjualan_pdf');
+    Route::get('pembelian/pdf', [LaporanController::class, 'pembelianPdf'])->name('pembelian_pdf');
+    Route::get('produk-terlaris/pdf', [LaporanController::class, 'produkTerlarisPdf'])->name('produk_terlaris_pdf');
 });
 
 // =====================

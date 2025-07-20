@@ -45,10 +45,8 @@ class PaymentController extends Controller
             $payment->order->status_order = 'lunas';
             $payment->order->save();
 
-            // Kurangi stok produk jika status berubah dari pending/failed menjadi lunas
-            if ($previousStatus !== 'lunas') {
-                $payment->order->reduceProductStock();
-            }
+            // TIDAK kurangi stok di sini, hanya update status ke lunas
+            // Stok akan dikurangi ketika admin ubah status ke "selesai"
 
             // Hapus snap token dari session karena pembayaran sudah lunas secara manual
             session()->forget('snap_tokens.' . $payment->order->id);
@@ -138,10 +136,8 @@ class PaymentController extends Controller
                 $payment->status_bayar = 'success';
                 $payment->waktu_bayar = now();
 
-                // Kurangi stok produk jika status berubah dari pending/failed menjadi lunas
-                if ($previousStatus !== 'lunas') {
-                    $order->reduceProductStock();
-                }
+                // TIDAK kurangi stok di sini, hanya update status ke lunas
+                // Stok akan dikurangi ketika admin ubah status ke "selesai"
 
                 // Hapus snap token dari session karena pembayaran sudah berhasil
                 session()->forget('snap_tokens.' . $order->id);

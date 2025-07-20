@@ -52,15 +52,13 @@ class MidtransController extends Controller
                 $previousStatus = $order->status_order;
                 $order->status_order = 'lunas'; // Sesuai dengan enum yang digunakan
 
-                // Kurangi stok produk jika status berubah dari pending/failed menjadi lunas
-                if ($previousStatus !== 'lunas') {
-                    $order->reduceProductStock();
-                }
-
-                Log::info('Order status updated to lunas', [
+                // TIDAK kurangi stok di sini, hanya update status ke lunas
+                // Stok akan dikurangi ketika admin ubah status ke "selesai"
+                
+                Log::info('Order status updated to lunas (payment complete)', [
                     'midtrans_order_id' => $midtrans_order_id,
                     'previous_status' => $previousStatus,
-                    'stock_reduced' => $previousStatus !== 'lunas'
+                    'note' => 'Stock will be reduced when status changed to selesai'
                 ]);
             } elseif ($transaction === 'expire' || $transaction === 'cancel') {
                 $order->status_order = 'failed';

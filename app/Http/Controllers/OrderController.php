@@ -100,10 +100,8 @@ class OrderController extends Controller
         $order->status_order = 'lunas';
         $order->save();
 
-        // Kurangi stok produk jika status berubah dari pending/failed menjadi lunas
-        if ($previousStatus !== 'lunas') {
-            $order->reduceProductStock();
-        }
+        // TIDAK kurangi stok di sini, hanya update status ke lunas
+        // Stok akan dikurangi ketika admin ubah status ke "selesai"
 
         // Bisa tambahkan Payment::create di sini jika perlu catat pembayaran
         // Payment::create([...]);
@@ -148,9 +146,10 @@ class OrderController extends Controller
         $order->status_order = $request->status_order;
         $order->save();
 
-        // Kurangi stok produk jika status berubah menjadi lunas
-        if ($request->status_order === 'lunas' && $previousStatus !== 'lunas') {
+        // Kurangi stok produk HANYA jika status berubah menjadi "selesai"
+        if ($request->status_order === 'selesai' && $previousStatus !== 'selesai') {
             $order->reduceProductStock();
+            return back()->with('success', 'Status pesanan berhasil diubah ke Selesai! Stok produk telah dikurangi.');
         }
 
         return back()->with('success', 'Status pesanan berhasil diubah!');
