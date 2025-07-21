@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html lang="id" class="light-style layout-navbar-fixed"
-    data-theme="theme-default"
-    data-assets-path="{{ asset('assets') }}/"
-    data-template="vertical-menu-template-free">
+<html lang="id" class="light-style layout-navbar-fixed" data-theme="theme-default"
+    data-assets-path="{{ asset('assets') }}/" data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="UTF-8">
@@ -34,6 +32,32 @@
             z-index: 1030;
             transition: box-shadow 0.2s;
         }
+
+        /* Global CSS untuk mengatasi masalah icon Midtrans CDN */
+        img[src*="d2f3dnusg0rbp7.cloudfront.net"] {
+            background: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 4px !important;
+            position: relative !important;
+            min-width: 60px !important;
+            min-height: 30px !important;
+        }
+
+        /* Hide broken images and show text fallback */
+        img[src*="d2f3dnusg0rbp7.cloudfront.net"][src*="svg"]:after {
+            content: "💳" !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            font-size: 16px !important;
+            z-index: 1 !important;
+        }
+
+        /* Alternative approach: completely hide CDN images */
+        .hide-cdn-images img[src*="d2f3dnusg0rbp7.cloudfront.net"] {
+            display: none !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -53,39 +77,39 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     @auth
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
-                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bx bx-user"></i> {{ auth()->user()->name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('home.profile') }}">
-                                    <i class="bx bx-user-circle me-1"></i> Profil Saya
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('home.myorders.index') }}">
-                                    <i class="bx bx-receipt me-1"></i> Pesanan Saya
-                                </a>
-                            </li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bx bx-power-off me-1"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bx bx-user"></i> {{ auth()->user()->name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('home.profile') }}">
+                                        <i class="bx bx-user-circle me-1"></i> Profil Saya
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('home.myorders.index') }}">
+                                        <i class="bx bx-receipt me-1"></i> Pesanan Saya
+                                    </a>
+                                </li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bx bx-power-off me-1"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
                     @else
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}"><i class="bx bx-log-in"></i> Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register') }}"><i class="bx bx-user-plus"></i> Register</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}"><i class="bx bx-log-in"></i> Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('register') }}"><i class="bx bx-user-plus"></i> Register</a>
+                        </li>
                     @endauth
                 </ul>
             </div>
@@ -99,9 +123,10 @@
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+    <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
-    <script src="{{ asset('assets/js/main.js') }}"></script>
     @stack('scripts')
+    <script src="{{ asset('assets/js/main.js') }}"></script>
 </body>
 
 </html>

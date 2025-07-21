@@ -139,11 +139,23 @@ class HomeController extends Controller
         Config::$is3ds = true;
 
         try {
+            // Siapkan item details untuk Midtrans
+            $itemDetails = [];
+            foreach ($keranjang as $item) {
+                $itemDetails[] = [
+                    'id' => $item['id'],
+                    'price' => $item['harga'],
+                    'quantity' => $item['qty'],
+                    'name' => $item['nama'], // Sesuaikan dengan key di session keranjang
+                ];
+            }
+
             $payload = [
                 'transaction_details' => [
                     'order_id' => $midtransOrderId,
                     'gross_amount' => $total,
                 ],
+                'item_details' => $itemDetails,
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email' => $user->email,
@@ -217,12 +229,24 @@ class HomeController extends Controller
         Config::$is3ds = true;
 
         try {
+            // Siapkan item details dari order items
+            $itemDetails = [];
+            foreach ($order->items as $orderItem) {
+                $itemDetails[] = [
+                    'id' => $orderItem->product_id,
+                    'price' => $orderItem->harga_jual,
+                    'quantity' => $orderItem->qty,
+                    'name' => $orderItem->product->nama_produk ?? 'Product #' . $orderItem->product_id,
+                ];
+            }
+
             // Gunakan midtrans_order_id yang sudah ada (TIDAK MEMBUAT BARU)
             $payload = [
                 'transaction_details' => [
                     'order_id' => $order->midtrans_order_id, // Pakai yang sudah ada
                     'gross_amount' => $order->total_order,
                 ],
+                'item_details' => $itemDetails,
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email' => $user->email,

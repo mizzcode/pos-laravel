@@ -86,6 +86,21 @@
                         </div>
                     @endif
 
+                    {{-- Tombol Lanjutkan Pembayaran jika status pending --}}
+                    @if ($order->status_order == 'pending')
+                        <div class="mt-4">
+                            <form action="{{ route('home.myorders.lanjutkan_pembayaran', $order->id) }}" method="POST" style="display: inline;">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bx bx-credit-card"></i> Lanjutkan Pembayaran
+                                </button>
+                            </form>
+                            <div class="small text-muted mt-2">
+                                Lanjutkan proses pembayaran untuk pesanan ini.
+                            </div>
+                        </div>
+                    @endif
+
                     <a href="{{ route('home.myorders.index') }}" class="btn btn-outline-secondary mt-3">
                         <i class="bx bx-arrow-back"></i> Kembali ke Pesanan Saya
                     </a>

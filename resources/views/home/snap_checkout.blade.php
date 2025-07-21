@@ -29,6 +29,7 @@
 @push('scripts')
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
     </script>
+
     <script>
         var orderId = @json($order->id);
         var snapToken = @json($snapToken);
@@ -44,34 +45,48 @@
                 return;
             }
 
-            window.snap.pay(snapToken, {
-                onSuccess: function(result) {
-                    console.log('Payment Success:', result);
-                    window.location.href = '/myorders/' + orderId;
-                },
-                onPending: function(result) {
-                    console.log('Payment Pending:', result);
-                    window.location.href = '/myorders/' + orderId;
-                },
-                onError: function(result) {
-                    console.log('Payment Error:', result);
-                    alert('Terjadi kesalahan dalam pembayaran');
-                    window.location.href = '/myorders/' + orderId;
-                },
-                onClose: function() {
-                    console.log('Payment closed by user');
-                    window.location.href = '/myorders/' + orderId;
-                }
-            });
+            console.log('🚀 Initiating Snap payment with token:', snapToken.substring(0, 20) + '...');
+
+            try {
+                window.snap.pay(snapToken, {
+                    onSuccess: function(result) {
+                        console.log('✅ Payment Success:', result);
+                        window.location.href = '/myorders/' + orderId;
+                    },
+                    onPending: function(result) {
+                        console.log('⏳ Payment Pending:', result);
+                        window.location.href = '/myorders/' + orderId;
+                    },
+                    onError: function(result) {
+                        console.log('❌ Payment Error:', result);
+                        alert('Terjadi kesalahan dalam pembayaran: ' + (result.status_message ||
+                            'Unknown error'));
+                        window.location.href = '/myorders/' + orderId;
+                    },
+                    onClose: function() {
+                        console.log('🚪 Payment closed by user');
+                        window.location.href = '/myorders/' + orderId;
+                    }
+                });
+            } catch (error) {
+                console.error('❌ Error calling snap.pay:', error);
+                alert('Terjadi kesalahan sistem: ' + error.message);
+            }
         }
 
         // Tunggu hingga halaman dan script sepenuhnya dimuat
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 Snap Checkout page loaded');
+            console.log('📦 Order ID:', orderId);
+            console.log('🎫 Snap Token:', snapToken ? snapToken.substring(0, 20) + '...' : 'Missing');
+
             // Cek apakah Snap sudah tersedia
             function checkSnapAvailability() {
                 if (window.snap) {
+                    console.log('✅ Midtrans Snap is available');
                     showSnap();
                 } else {
+                    console.log('⏳ Waiting for Midtrans Snap...');
                     setTimeout(checkSnapAvailability, 500);
                 }
             }
@@ -82,6 +97,7 @@
             // Event handler untuk tombol manual
             document.getElementById('retry-pay').onclick = function(e) {
                 e.preventDefault();
+                console.log('🔄 Manual payment button clicked');
                 showSnap();
             };
         });
