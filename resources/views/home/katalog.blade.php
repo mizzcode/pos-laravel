@@ -92,9 +92,13 @@
                         <img src="{{ $imageUrl }}" class="card-img-top" alt="{{ $p->nama_produk }}"
                             style="height:160px;object-fit:cover;" onerror="this.src='{{ $defaultPlaceholder }}'">
                     @else
-                        <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;">
-                            <i class="bx bx-image-alt text-secondary" style="font-size:2.2rem;"></i>
-                        </div>
+                        @php
+                            // Jika tidak ada gambar sama sekali, gunakan placeholder
+                            $defaultPlaceholder =
+                                'https://placehold.co/500x500/95A5A6/FFFFFF?text=' . urlencode($p->nama_produk);
+                        @endphp
+                        <img src="{{ $defaultPlaceholder }}" class="card-img-top" alt="{{ $p->nama_produk }}"
+                            style="height:160px;object-fit:cover;">
                     @endif
                     <div class="card-body d-flex flex-column pb-2">
                         <div class="mb-1 text-muted small">{{ $p->category->nama_kategori ?? '-' }}</div>
