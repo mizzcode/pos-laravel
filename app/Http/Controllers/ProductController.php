@@ -199,7 +199,7 @@ class ProductController extends Controller
                         Log::info("Generated filename: {$filename}");
 
                         // Store the image
-                        $path = $image->storeAs('product-images', $filename, 'public');
+                        $path = $image->storeAs('product_images', $filename, 'public');
                         Log::info("Image stored at: {$path}");
 
                         // Create ProductImage record
