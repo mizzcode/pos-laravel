@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="id"
-    class="light-style layout-menu-fixed"
-    dir="ltr"
-    data-theme="theme-default"
-    data-assets-path="{{ asset('assets/') }}/"
-    data-template="vertical-menu-template-free">
+<html lang="id" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default"
+    data-assets-path="{{ asset('assets/') }}/" data-template="vertical-menu-template-free">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin POS</title>
 
     <!-- Favicon -->
@@ -16,12 +13,14 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <!-- Icons -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}" />
     <!-- Core CSS -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}"
+        class="template-customizer-theme-css" />
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
@@ -40,7 +39,8 @@
                     <a href="{{ route('dashboard.admin') }}" class="app-brand-link">
                         <span class="app-brand-text demo menu-text fw-bolder ms-2">Shop</span>
                     </a>
-                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                    <a href="javascript:void(0);"
+                        class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
                         <i class="bx bx-chevron-left bx-sm align-middle"></i>
                     </a>
                 </div>
@@ -52,7 +52,8 @@
                             <div>Dashboard</div>
                         </a>
                     </li>
-                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Verifikasi & Master Data</span></li>
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Verifikasi & Master
+                            Data</span></li>
                     <li class="menu-item {{ request()->routeIs('users.verifikasi') ? 'active' : '' }}">
                         <a href="{{ route('users.verifikasi') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-user-check"></i>
@@ -89,7 +90,8 @@
                             <div>Kelola Customer</div>
                         </a>
                     </li>
-                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Transaksi & Laporan</span></li>
+                    <li class="menu-header small text-uppercase"><span class="menu-header-text">Transaksi &
+                            Laporan</span></li>
                     <li class="menu-item {{ request()->routeIs('orders.index') ? 'active' : '' }}">
                         <a href="{{ route('orders.index') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-cart"></i>
@@ -103,7 +105,8 @@
                         </a>
                         <ul class="menu-sub">
                             <li class="menu-item {{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}">
-                                <a href="{{ route('laporan.penjualan') }}" class="menu-link">Penjualan Harian/Bulanan</a>
+                                <a href="{{ route('laporan.penjualan') }}" class="menu-link">Penjualan
+                                    Harian/Bulanan</a>
                             </li>
                             <li class="menu-item {{ request()->routeIs('laporan.produk_terlaris') ? 'active' : '' }}">
                                 <a href="{{ route('laporan.produk_terlaris') }}" class="menu-link">Produk Terlaris</a>
@@ -120,7 +123,8 @@
             <!-- Layout page (content & topbar) -->
             <div class="layout-page">
                 <!-- Navbar -->
-                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+                    id="layout-navbar">
                     <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
                         <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
                             <i class="bx bx-menu bx-sm"></i>
@@ -130,38 +134,44 @@
                     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" data-bs-toggle="dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="notifDropdown"
+                                    data-bs-toggle="dropdown">
                                     <i class="bx bx-bell bx-tada"></i>
-                                    @if($notif_products->count() > 0)
-                                    <span class="badge bg-danger">{{ $notif_products->count() }}</span>
+                                    @if ($notif_products->count() > 0)
+                                        <span class="badge bg-danger">{{ $notif_products->count() }}</span>
                                     @endif
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown" style="min-width:280px">
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown"
+                                    style="min-width:280px">
                                     <li class="dropdown-header">Produk Supplier Baru</li>
                                     @forelse($notif_products as $np)
-                                    <li>
-                                        <a href="{{ route('products.show', $np->id) }}" class="dropdown-item d-flex align-items-start py-2">
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold">{{ $np->nama_produk }}</div>
-                                                <div class="small text-muted">
-                                                    Supplier: {{ $np->supplier->name ?? '-' }}<br>
-                                                    <span class="text-muted">{{ $np->created_at->diffForHumans() }}</span>
+                                        <li>
+                                            <a href="{{ route('products.show', $np->id) }}"
+                                                class="dropdown-item d-flex align-items-start py-2">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">{{ $np->nama_produk }}</div>
+                                                    <div class="small text-muted">
+                                                        Supplier: {{ $np->supplier->name ?? '-' }}<br>
+                                                        <span
+                                                            class="text-muted">{{ $np->created_at->diffForHumans() }}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </a>
-                                    </li>
+                                            </a>
+                                        </li>
                                     @empty
-                                    <li>
-                                        <div class="dropdown-item small text-muted">Tidak ada produk baru.</div>
-                                    </li>
+                                        <li>
+                                            <div class="dropdown-item small text-muted">Tidak ada produk baru.</div>
+                                        </li>
                                     @endforelse
                                 </ul>
                             </li>
 
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                                <a class="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
+                                <a class="nav-link dropdown-toggle hide-arrow" href="#"
+                                    data-bs-toggle="dropdown">
                                     <div class="avatar avatar-online">
-                                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle" />
+                                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt
+                                            class="w-px-40 h-auto rounded-circle" />
                                     </div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -170,11 +180,13 @@
                                             <div class="d-flex">
                                                 <div class="flex-shrink-0 me-3">
                                                     <div class="avatar avatar-online">
-                                                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle" />
+                                                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt
+                                                            class="w-px-40 h-auto rounded-circle" />
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <span class="fw-semibold d-block">{{ auth()->user()->name ?? 'Admin' }}</span>
+                                                    <span
+                                                        class="fw-semibold d-block">{{ auth()->user()->name ?? 'Admin' }}</span>
                                                     <small class="text-muted">Admin</small>
                                                 </div>
                                             </div>

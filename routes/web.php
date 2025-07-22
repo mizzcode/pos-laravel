@@ -92,10 +92,12 @@ Route::resource('categories', CategoryController::class)->except(['show']);
 // =====================
 // PRODUK (admin)
 // =====================
-Route::resource('products', ProductController::class);
-Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');
+// Route untuk gambar produk harus sebelum resource products
 Route::post('products/{productId}/images', [ProductImageController::class, 'store'])->name('products.images.store');
 Route::delete('product-images/{id}', [ProductImageController::class, 'destroy'])->name('products.images.destroy');
+
+Route::resource('products', ProductController::class);
+Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');
 
 // =====================
 // SUPPLIER (admin-only)
@@ -150,7 +152,7 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
     Route::get('produk-terlaris', [LaporanController::class, 'produkTerlaris'])->name('produk_terlaris');
     Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
-    
+
     // PDF exports
     Route::get('penjualan/pdf', [LaporanController::class, 'penjualanPdf'])->name('penjualan_pdf');
     Route::get('pembelian/pdf', [LaporanController::class, 'pembelianPdf'])->name('pembelian_pdf');

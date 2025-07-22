@@ -22,27 +22,27 @@ class AuthController extends Controller
         // Validasi tambahan jika role mitra
         if ($r->role === 'mitra') {
             $r->validate([
-                'nama_usaha' => 'required|string|max:100',
-                'no_hp'      => 'required|string|max:30',
-                'alamat'     => 'required|string|max:255',
-                'foto'       => 'nullable|image|max:2048',
+                'nama_usaha'   => 'required|string|max:100',
+                'mitra_no_hp'  => 'required|string|max:30',
+                'mitra_alamat' => 'required|string|max:255',
+                'foto'         => 'nullable|image|max:2048',
             ]);
         }
         // Validasi tambahan jika role supplier
         if ($r->role === 'supplier') {
             $r->validate([
-                'perusahaan' => 'required|string|max:100',
-                'no_hp'      => 'required|string|max:30',
-                'alamat'     => 'required|string|max:255',
-                'foto'       => 'nullable|image|max:2048',
+                'perusahaan'     => 'required|string|max:100',
+                'supplier_no_hp' => 'required|string|max:30',
+                'supplier_alamat' => 'required|string|max:255',
+                'foto'           => 'nullable|image|max:2048',
             ]);
         }
         // Validasi tambahan jika role customer
         if ($r->role === 'customer') {
             $r->validate([
-                'alamat'  => 'required|string|max:255',
-                'no_hp'   => 'required|string|max:30',
-                'foto'    => 'nullable|image|max:2048',
+                'customer_alamat' => 'required|string|max:255',
+                'customer_no_hp'  => 'required|string|max:30',
+                'foto'            => 'nullable|image|max:2048',
             ]);
         }
 
@@ -63,23 +63,23 @@ class AuthController extends Controller
             $user->supplier()->create([
                 'nama_supplier' => $r->name, // OTOMATIS dari Nama Lengkap!
                 'perusahaan'    => $r->perusahaan,
-                'no_hp'         => $r->no_hp,
-                'alamat'        => $r->alamat,
+                'no_hp'         => $r->supplier_no_hp,
+                'alamat'        => $r->supplier_alamat,
                 'foto'          => $fotoPath,
             ]);
         } elseif ($data['role'] === 'mitra') {
             $user->mitra()->create([
                 'nama_mitra'  => $r->name, // OTOMATIS dari Nama Lengkap!
                 'nama_usaha'  => $r->nama_usaha,
-                'no_hp'       => $r->no_hp,
-                'alamat'      => $r->alamat,
+                'no_hp'       => $r->mitra_no_hp,
+                'alamat'      => $r->mitra_alamat,
                 'foto'        => $fotoPath,
             ]);
         } elseif ($data['role'] === 'customer') {
             $user->customer()->create([
                 'nama_customer' => $r->name, // OTOMATIS dari Nama Lengkap!
-                'alamat'        => $r->alamat,
-                'no_hp'         => $r->no_hp,
+                'alamat'        => $r->customer_alamat,
+                'no_hp'         => $r->customer_no_hp,
                 'foto'          => $fotoPath,
             ]);
         }

@@ -10,15 +10,14 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('role')->default('customer')->after('email');
-            $table->string('phone')->nullable()->after('role');
-            $table->text('address')->nullable()->after('phone');
+            $table->boolean('is_active')->default(false)->after('role');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'phone', 'address']);
+            $table->dropColumn(['role', 'is_active']);
         });
     }
 };

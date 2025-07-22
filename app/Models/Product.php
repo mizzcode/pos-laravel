@@ -14,7 +14,9 @@ class Product extends Model
         'harga_beli',
         'harga_jual',
         'stok',
-        'deskripsi'
+        'deskripsi',
+        'notif_admin_seen',
+        'is_approved'
     ];
 
     public function category()

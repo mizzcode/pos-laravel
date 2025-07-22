@@ -11,6 +11,7 @@ use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
@@ -22,7 +23,16 @@ class HomeController extends Controller
         $kategori = $request->kategori;
         $categories = Category::orderBy('nama_kategori')->get();
 
-        $products = Product::with('images')
+        // Query produk yang bisa dilihat customer:
+        // 1. Produk toko (supplier_id = null) - tidak perlu approval
+        // 2. Produk supplier yang sudah di-approve (is_approved = 1)
+        $products = Product::with(['images' => function ($query) {
+            $query->orderBy('urutan', 'asc'); // Urutkan gambar berdasarkan urutan
+        }, 'category'])
+            ->where(function ($query) {
+                $query->whereNull('supplier_id') // Produk toko
+                    ->orWhere('is_approved', 1); // Atau produk supplier yang sudah approved
+            })
             ->when($kategori, fn($q) => $q->where('category_id', $kategori))
             ->orderBy('created_at', 'desc')
             ->paginate(12);
@@ -198,6 +208,21 @@ class HomeController extends Controller
         $orders = Order::where('user_id', Auth::id())
             ->orderByDesc('created_at')
             ->get();
+
+        // Log untuk debugging - cek status orders  
+        Log::info('Orders list loaded', [
+            'user_id' => Auth::id(),
+            'orders_count' => $orders->count(),
+            'orders_status' => $orders->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'status' => $order->status_order,
+                    'midtrans_id' => $order->midtrans_order_id,
+                    'updated_at' => $order->updated_at
+                ];
+            })->toArray()
+        ]);
+
         return view('home.orders', compact('orders'));
     }
 
@@ -207,6 +232,15 @@ class HomeController extends Controller
         $order = Order::with('items.product')
             ->where('user_id', Auth::id())
             ->findOrFail($id);
+
+        // Log untuk debugging - pastikan data fresh dari database
+        Log::info('Order detail loaded from database', [
+            'order_id' => $order->id,
+            'status_order' => $order->status_order,
+            'midtrans_order_id' => $order->midtrans_order_id,
+            'updated_at' => $order->updated_at
+        ]);
+
         return view('home.order_detail', compact('order'));
     }
 
@@ -229,6 +263,62 @@ class HomeController extends Controller
         Config::$is3ds = true;
 
         try {
+            // STEP 1: Cek status transaksi di Midtrans terlebih dahulu
+            Log::info('[Lanjutkan Pembayaran] Checking Midtrans transaction status', [
+                'order_id' => $order->id,
+                'midtrans_order_id' => $order->midtrans_order_id
+            ]);
+
+            try {
+                $midtransStatus = Transaction::status($order->midtrans_order_id);
+                $transactionStatus = $midtransStatus->transaction_status ?? 'unknown';
+
+                Log::info('[Lanjutkan Pembayaran] Midtrans status check result', [
+                    'transaction_status' => $transactionStatus,
+                    'status_code' => $midtransStatus->status_code ?? 'unknown'
+                ]);
+
+                // Jika transaksi sudah settlement/success, redirect ke detail
+                if (in_array($transactionStatus, ['settlement', 'capture', 'success'])) {
+                    Log::info('[Lanjutkan Pembayaran] Transaction already completed', [
+                        'transaction_status' => $transactionStatus
+                    ]);
+                    return redirect()->route('home.myorders.detail', $id)
+                        ->with('info', 'Pembayaran sudah berhasil diproses.');
+                }
+
+                // Jika transaksi expire/cancel/failed, tidak bisa dilanjutkan
+                if (in_array($transactionStatus, ['expire', 'cancel', 'deny', 'failure'])) {
+                    Log::warning('[Lanjutkan Pembayaran] Transaction cannot be continued', [
+                        'transaction_status' => $transactionStatus
+                    ]);
+                    return redirect()->route('home.myorders.detail', $id)
+                        ->with('error', 'Transaksi sudah tidak valid. Status: ' . $transactionStatus);
+                }
+
+                // Jika pending, lanjutkan dengan token yang sudah ada jika memungkinkan
+                if ($transactionStatus === 'pending') {
+                    Log::info('[Lanjutkan Pembayaran] Transaction is pending, will try to reuse or create new token');
+                }
+            } catch (\Exception $statusError) {
+                // Jika gagal cek status (mungkin order_id belum ada di Midtrans), lanjutkan proses normal
+                Log::warning('[Lanjutkan Pembayaran] Cannot check Midtrans status, proceeding normally', [
+                    'error' => $statusError->getMessage()
+                ]);
+            }
+
+            // STEP 2: Coba gunakan snap token dari session terlebih dahulu
+            $sessionSnapToken = session('snap_token_' . $order->id);
+            if ($sessionSnapToken) {
+                Log::info('[Lanjutkan Pembayaran] Using existing snap token from session');
+                return view('home.snap_checkout', [
+                    'snapToken' => $sessionSnapToken,
+                    'order' => $order,
+                    'isRetry' => true
+                ]);
+            }
+
+            // STEP 3: Buat Snap token baru dengan order_id yang sudah ada
             // Siapkan item details dari order items
             $itemDetails = [];
             foreach ($order->items as $orderItem) {
@@ -239,6 +329,11 @@ class HomeController extends Controller
                     'name' => $orderItem->product->nama_produk ?? 'Product #' . $orderItem->product_id,
                 ];
             }
+
+            Log::info('[Lanjutkan Pembayaran] Creating new Snap token', [
+                'order_id' => $order->midtrans_order_id,
+                'gross_amount' => $order->total_order
+            ]);
 
             // Gunakan midtrans_order_id yang sudah ada (TIDAK MEMBUAT BARU)
             $payload = [
@@ -256,6 +351,10 @@ class HomeController extends Controller
             // Generate snap token baru untuk order yang sama
             $snapToken = Snap::getSnapToken($payload);
 
+            Log::info('[Lanjutkan Pembayaran] Snap token created successfully', [
+                'token_length' => strlen($snapToken)
+            ]);
+
             // Simpan snap token ke session untuk recovery jika diperlukan
             session(['snap_token_' . $order->id => $snapToken]);
 
@@ -265,7 +364,73 @@ class HomeController extends Controller
                 'isRetry' => true // Flag untuk indikasi ini adalah retry payment
             ]);
         } catch (\Exception $e) {
-            Log::error('[Lanjutkan Pembayaran Error] Order ID: ' . $order->id . ' - ' . $e->getMessage());
+            Log::error('[Lanjutkan Pembayaran Error] Order ID: ' . $order->id . ' - ' . $e->getMessage(), [
+                'error_details' => [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'code' => $e->getCode()
+                ],
+                'order_details' => [
+                    'id' => $order->id,
+                    'midtrans_order_id' => $order->midtrans_order_id,
+                    'status' => $order->status_order
+                ]
+            ]);
+
+            // Jika error "order_id has already been taken", coba buat order_id baru
+            if (strpos($e->getMessage(), 'has already been taken') !== false) {
+                Log::info('[Lanjutkan Pembayaran] Trying with new order ID due to duplicate error');
+
+                try {
+                    // Buat order_id baru dengan suffix retry
+                    $newOrderId = $order->midtrans_order_id . '-R' . time();
+
+                    Log::info('[Lanjutkan Pembayaran] Creating with new order ID', [
+                        'original_order_id' => $order->midtrans_order_id,
+                        'new_order_id' => $newOrderId
+                    ]);
+
+                    $newPayload = [
+                        'transaction_details' => [
+                            'order_id' => $newOrderId,
+                            'gross_amount' => $order->total_order,
+                        ],
+                        'item_details' => $itemDetails,
+                        'customer_details' => [
+                            'first_name' => $user->name,
+                            'email' => $user->email,
+                        ],
+                    ];
+
+                    $snapToken = Snap::getSnapToken($newPayload);
+
+                    // Update midtrans_order_id dengan yang baru
+                    $order->midtrans_order_id = $newOrderId;
+                    $order->save();
+
+                    Log::info('[Lanjutkan Pembayaran] Success with new order ID', [
+                        'new_order_id' => $newOrderId
+                    ]);
+
+                    // Simpan snap token ke session
+                    session(['snap_token_' . $order->id => $snapToken]);
+
+                    return view('home.snap_checkout', [
+                        'snapToken' => $snapToken,
+                        'order' => $order,
+                        'isRetry' => true
+                    ]);
+                } catch (\Exception $retryError) {
+                    Log::error('[Lanjutkan Pembayaran Retry Error]', [
+                        'error' => $retryError->getMessage()
+                    ]);
+
+                    return redirect()->route('home.myorders.detail', $id)
+                        ->with('error', 'Gagal melanjutkan pembayaran: ' . $retryError->getMessage());
+                }
+            }
+
             return redirect()->route('home.myorders.detail', $id)
                 ->with('error', 'Gagal melanjutkan pembayaran: ' . $e->getMessage());
         }

@@ -115,10 +115,10 @@ class SupplierProductController extends Controller
 
     public function produkToko(Request $request)
     {
-        // Hanya menampilkan produk toko (internal/admin) = supplier_id NULL dan sudah di-approve
+        // Hanya menampilkan produk toko (internal/admin) = supplier_id NULL
+        // Hapus kondisi is_approved karena produk toko tidak perlu approval
         $query = \App\Models\Product::with('category')
-            ->whereNull('supplier_id')
-            ->where('is_approved', 1);
+            ->whereNull('supplier_id'); // Hanya produk toko/admin
 
         if ($request->filled('q')) {
             $query->where('nama_produk', 'like', '%' . $request->q . '%');

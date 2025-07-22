@@ -13,6 +13,9 @@
     <!-- Boxicons -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
+
+    @yield('head')
+
     <style>
         body {
             background: #f7f7fb;

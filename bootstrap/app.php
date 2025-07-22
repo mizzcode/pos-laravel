@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
             '*.ngrok.io',
             '*.ngrok-free.app'
         ]);
+
+        // Register custom middleware aliases
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

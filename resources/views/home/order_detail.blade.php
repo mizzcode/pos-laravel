@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+@section('head')
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+@endsection
+
 @section('content')
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -57,7 +63,8 @@
                                         <td>{{ $item->product->nama_produk ?? '-' }}</td>
                                         <td class="text-end">Rp{{ number_format($item->harga_jual, 0, ',', '.') }}</td>
                                         <td class="text-center">{{ $item->qty }}</td>
-                                        <td class="text-end fw-semibold">Rp{{ number_format($item->subtotal, 0, ',', '.') }}
+                                        <td class="text-end fw-semibold">
+                                            Rp{{ number_format($item->subtotal, 0, ',', '.') }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -89,7 +96,8 @@
                     {{-- Tombol Lanjutkan Pembayaran jika status pending --}}
                     @if ($order->status_order == 'pending')
                         <div class="mt-4">
-                            <form action="{{ route('home.myorders.lanjutkan_pembayaran', $order->id) }}" method="POST" style="display: inline;">
+                            <form action="{{ route('home.myorders.lanjutkan_pembayaran', $order->id) }}" method="POST"
+                                style="display: inline;">
                                 @csrf
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bx bx-credit-card"></i> Lanjutkan Pembayaran
