@@ -16,7 +16,9 @@ class Product extends Model
         'stok',
         'deskripsi',
         'notif_admin_seen',
-        'is_approved'
+        'is_approved',
+        'is_rejected',
+        'rejection_reason'
     ];
 
     public function category()
@@ -31,5 +33,11 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    // Accessor untuk harga_beli: jika null return 0
+    public function getHargaBeliAttribute($value)
+    {
+        return $value ?? 0;
     }
 }

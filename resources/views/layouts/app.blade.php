@@ -80,6 +80,20 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     @auth
+                        @if (auth()->user()->role === 'admin')
+                            <!-- Notifikasi Admin -->
+                            <li class="nav-item">
+                                <a class="nav-link position-relative" href="{{ route('notifications.index') }}">
+                                    <i class="bx bx-bell"></i>
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        id="notif-count" style="font-size: 0.7rem;">
+                                        0
+                                    </span>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -128,6 +142,29 @@
     <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
+
+    @if (auth()->check() && auth()->user()->role === 'admin')
+        <script>
+            // Update notifikasi count untuk admin
+            function updateNotificationCount() {
+                fetch('{{ route('notifications.count') }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const badge = document.getElementById('notif-count');
+                        if (badge) {
+                            badge.textContent = data.count;
+                            badge.style.display = data.count > 0 ? 'inline' : 'none';
+                        }
+                    })
+                    .catch(error => console.log('Error fetching notification count:', error));
+            }
+
+            // Update count saat halaman dimuat dan setiap 30 detik
+            document.addEventListener('DOMContentLoaded', updateNotificationCount);
+            setInterval(updateNotificationCount, 30000);
+        </script>
+    @endif
+
     @stack('scripts')
     <script src="{{ asset('assets/js/main.js') }}"></script>
 </body>

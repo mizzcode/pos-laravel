@@ -13,10 +13,16 @@ class ProductController extends Controller
 {
     public function index()
     {
-        // Tampilkan SEMUA produk (internal & supplier)
-        $products = \App\Models\Product::with('category', 'supplier')
+        // Tampilkan SEMUA produk yang tersedia di toko:
+        // 1. Produk toko internal (supplier_id = null)
+        // 2. Produk supplier yang sudah disetujui (is_approved = 1)
+        $products = \App\Models\Product::with(['category', 'supplier'])
+            ->where(function ($query) {
+                $query->whereNull('supplier_id') // Produk toko internal
+                    ->orWhere('is_approved', 1); // Atau produk supplier yang sudah approved
+            })
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(10);
 
         // Notifikasi produk supplier baru (opsional)
         $notif_products = \App\Models\Product::whereNotNull('supplier_id')
@@ -33,11 +39,9 @@ class ProductController extends Controller
     {
         $product = Product::with(['category', 'supplier', 'images'])->findOrFail($id);
 
-        // Update notifikasi jika produk supplier dan belum dilihat admin
-        if ($product->supplier_id && !$product->notif_admin_seen) {
-            $product->notif_admin_seen = 1;
-            $product->save();
-        }
+        // JANGAN update notif_admin_seen di sini
+        // Biarkan status tetap "Menunggu Review" sampai admin mengambil tindakan
+        // notif_admin_seen akan diupdate hanya saat approve/reject
 
         return view('admin.products.show', compact('product'));
     }

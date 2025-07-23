@@ -107,20 +107,42 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="harga_beli" class="form-label">Harga Beli</label>
+                            <label for="harga_beli" class="form-label">
+                                @if ($product->supplier_id)
+                                    Harga Beli (dari Supplier)
+                                @else
+                                    Harga Beli
+                                @endif
+                            </label>
                             <input type="number" name="harga_beli" id="harga_beli"
                                 class="form-control @error('harga_beli') is-invalid @enderror" min="0"
-                                value="{{ old('harga_beli', $product->harga_beli) }}">
+                                value="{{ old('harga_beli', $product->supplier_id ? $product->harga_jual : $product->harga_beli) }}"
+                                {{ $product->supplier_id ? 'readonly' : '' }}>
+                            @if ($product->supplier_id)
+                                <small class="text-muted">Harga ini diambil dari harga jual supplier dan tidak bisa
+                                    diubah</small>
+                            @endif
                             @error('harga_beli')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label for="harga_jual" class="form-label">Harga Jual</label>
+                            <label for="harga_jual" class="form-label">
+                                @if ($product->supplier_id)
+                                    Harga Jual (Katalog Toko)
+                                @else
+                                    Harga Jual
+                                @endif
+                            </label>
                             <input type="number" name="harga_jual" id="harga_jual"
                                 class="form-control @error('harga_jual') is-invalid @enderror" min="0"
-                                value="{{ old('harga_jual', $product->harga_jual) }}" required>
+                                value="{{ old('harga_jual', $product->supplier_id ? $product->harga_jual * 1.2 : $product->harga_jual) }}"
+                                required>
+                            @if ($product->supplier_id)
+                                <small class="text-muted">Default margin 20% dari harga supplier, bisa diubah sesuai
+                                    kebutuhan</small>
+                            @endif
                             @error('harga_jual')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -157,7 +179,7 @@
 
                             @php
                                 // Filter images yang benar-benar memiliki file yang ada
-                                $validImages = $product->images->filter(function($img) {
+                                $validImages = $product->images->filter(function ($img) {
                                     if (str_starts_with($img->file_path, 'http')) {
                                         // URL eksternal, anggap valid
                                         return true;
@@ -182,7 +204,7 @@
                                                     $imageUrl = asset('storage/' . $img->file_path);
                                                 }
                                             @endphp
-                                            
+
                                             <div class="col-auto mb-2">
                                                 <div class="card" style="width: 120px;">
                                                     <img src="{{ $imageUrl }}" class="card-img-top"
@@ -218,7 +240,7 @@
 
                             @php
                                 // Cek apakah ada images dengan file yang tidak ada (untuk ditampilkan sebagai error)
-                                $brokenImages = $product->images->filter(function($img) {
+                                $brokenImages = $product->images->filter(function ($img) {
                                     if (str_starts_with($img->file_path, 'http')) {
                                         return false; // URL eksternal tidak bisa dicek
                                     } else {
@@ -237,7 +259,8 @@
                                                 <div class="card border-danger" style="width: 120px;">
                                                     <div class="card-body p-2 text-center">
                                                         <i class="bx bx-error-circle text-danger fs-3"></i>
-                                                        <small class="text-danger d-block mb-1">File tidak ditemukan</small>
+                                                        <small class="text-danger d-block mb-1">File tidak
+                                                            ditemukan</small>
                                                         <small class="text-muted d-block mb-2">
                                                             @if ($img->is_default)
                                                                 <i class="bx bx-star text-warning"></i> Utama
@@ -257,14 +280,14 @@
                                         @endforeach
                                     </div>
                                     <div class="alert alert-warning mt-2">
-                                        <i class="bx bx-info-circle"></i> 
-                                        <strong>Perhatian:</strong> File gambar di atas tidak ditemukan di server. 
+                                        <i class="bx bx-info-circle"></i>
+                                        <strong>Perhatian:</strong> File gambar di atas tidak ditemukan di server.
                                         Silakan hapus record atau upload ulang gambar yang sesuai.
                                     </div>
                                 </div>
                             @endif
 
-                            @if ((!$product->images || count($product->images) == 0) || (count($validImages) == 0 && count($brokenImages) == 0))
+                            @if (!$product->images || count($product->images) == 0 || (count($validImages) == 0 && count($brokenImages) == 0))
                                 <div class="mt-2">
                                     <div class="alert alert-info">
                                         <i class="bx bx-info-circle"></i> Belum ada foto untuk produk ini. Silakan upload

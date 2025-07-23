@@ -32,16 +32,59 @@ class SupplierController extends Controller
         return view('admin.suppliers.products', compact('supplier', 'products'));
     }
 
-    // Pesan produk dari supplier (buat purchase dan clone produk ke toko)
+    // Approve produk supplier agar masuk ke produk toko
+    public function approveProduct($product_id)
+    {
+        $supplierProduct = \App\Models\Product::where('supplier_id', '!=', null)
+            ->where('id', $product_id)
+            ->firstOrFail();
+
+        // Clone produk ke produk toko (admin)
+        $newProduct = $supplierProduct->replicate();
+        $newProduct->supplier_id = null; // Jadi produk toko
+        $newProduct->is_approved = 1;
+        $newProduct->notif_admin_seen = 1;
+
+        // Harga jual supplier menjadi harga beli admin
+        $newProduct->harga_beli = $supplierProduct->harga_jual;
+
+        // Generate unique kode_produk for the new admin product
+        $baseCode = 'ADM-' . $supplierProduct->category_id . '-';
+        $counter = 1;
+
+        do {
+            $kode_produk = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $exists = \App\Models\Product::where('kode_produk', $kode_produk)->exists();
+            $counter++;
+        } while ($exists);
+
+        $newProduct->kode_produk = $kode_produk;
+        $newProduct->save();
+
+        // Clone foto juga jika ada
+        foreach ($supplierProduct->images as $img) {
+            $newProduct->images()->create(['file_path' => $img->file_path]);
+        }
+
+        // Update status produk supplier menjadi approved
+        $supplierProduct->is_approved = 1;
+        $supplierProduct->notif_admin_seen = 1;
+        $supplierProduct->save();
+
+        return back()->with('success', 'Produk berhasil disetujui dan masuk ke katalog toko!');
+    }
+
+    // Pesan produk dari supplier (hanya untuk restock produk yang sudah approved)
     public function orderProduct(Request $request, $supplier_id, $product_id)
     {
         $request->validate([
             'qty' => 'required|integer|min:1'
         ]);
 
-        // Ambil produk supplier
+        // Ambil produk supplier yang sudah approved
         $supplierProduct = \App\Models\Product::where('supplier_id', $supplier_id)
             ->where('id', $product_id)
+            ->where('is_approved', 1)
             ->firstOrFail();
 
         $qty = $request->qty;
@@ -51,40 +94,20 @@ class SupplierController extends Controller
             return back()->with('error', 'Stok tidak cukup.');
         }
 
-        // Cari produk toko (internal/admin) dengan nama & kategori yang sama (atau kode_produk kalau ada)
+        // Cari produk toko (internal/admin) dengan nama & kategori yang sama
         $adminProduct = \App\Models\Product::whereNull('supplier_id')
             ->where('nama_produk', $supplierProduct->nama_produk)
             ->where('category_id', $supplierProduct->category_id)
             ->first();
 
-        if ($adminProduct) {
-            // Tambah stok admin
-            $adminProduct->stok += $qty;
-            $adminProduct->save();
-        } else {
-            // Buat produk baru di admin (clone dari supplier, tapi supplier_id NULL)
-            $newProduct = $supplierProduct->replicate();
-            $newProduct->supplier_id = null;
-            $newProduct->stok = $qty;
-
-            // Generate unique kode_produk for the new admin product
-            $baseCode = 'ADM-' . $supplierProduct->category_id . '-';
-            $counter = 1;
-
-            do {
-                $kode_produk = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
-                $exists = \App\Models\Product::where('kode_produk', $kode_produk)->exists();
-                $counter++;
-            } while ($exists);
-
-            $newProduct->kode_produk = $kode_produk;
-            $newProduct->save();
-
-            // Clone foto juga jika ada
-            foreach ($supplierProduct->images as $img) {
-                $newProduct->images()->create(['file_path' => $img->file_path]);
-            }
+        if (!$adminProduct) {
+            return back()->with('error', 'Produk belum ada di toko. Silakan approve dulu produk ini.');
         }
+
+        // Tambah stok admin dan update harga beli dari harga jual supplier
+        $adminProduct->stok += $qty;
+        $adminProduct->harga_beli = $supplierProduct->harga_jual;
+        $adminProduct->save();
 
         // Kurangi stok di supplier
         $supplierProduct->stok -= $qty;

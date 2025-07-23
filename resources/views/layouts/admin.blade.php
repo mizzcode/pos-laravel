@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
 
     @stack('styles')
+
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('assets/js/config.js') }}"></script>
 </head>
@@ -70,6 +71,12 @@
                         <a href="{{ route('products.index') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-cube"></i>
                             <div>Kelola Produk Toko</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('admin.supplier-products.index') ? 'active' : '' }}">
+                        <a href="{{ route('admin.supplier-products.index') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-package"></i>
+                            <div>Produk Supplier</div>
                         </a>
                     </li>
                     <li class="menu-item {{ request()->routeIs('suppliers.index') ? 'active' : '' }}">

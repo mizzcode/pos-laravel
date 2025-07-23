@@ -16,9 +16,11 @@ use App\Http\Controllers\{
     MidtransController,
     SupplierDashboardController,
     SupplierProductController,
+    SupplierProductAdminController,
     HomeController,
     ProfileController,
-    AdminDashboardController
+    AdminDashboardController,
+    NotificationController
 };
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
@@ -105,6 +107,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');
 
     // =====================
+    // SUPPLIER PRODUCTS MANAGEMENT (admin-only)
+    // =====================
+    Route::prefix('admin/supplier-products')->name('admin.supplier-products.')->group(function () {
+        Route::get('/', [SupplierProductAdminController::class, 'index'])->name('index');
+        Route::post('approve/{product_id}', [SupplierProductAdminController::class, 'approve'])->name('approve');
+        Route::post('reject/{product_id}', [SupplierProductAdminController::class, 'reject'])->name('reject');
+    });
+
+    // =====================
+    // SUPPLIER (admin-only)
+    // =====================
     // SUPPLIER (admin-only)
     // =====================
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
@@ -112,8 +125,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('suppliers/{id}/verify', [SupplierController::class, 'verify'])->name('suppliers.verify');
     Route::post('suppliers/{id}/nonaktif', [SupplierController::class, 'nonaktif'])->name('suppliers.nonaktif');
     Route::get('suppliers/{id}/products', [SupplierController::class, 'products'])->name('suppliers.products');
+    Route::post('suppliers/approve-product/{product_id}', [SupplierController::class, 'approveProduct'])->name('suppliers.approve-product');
     // Route untuk menambah stok produk dari supplier ke toko (ADMIN beli dari supplier)
     Route::post('suppliers/{supplier_id}/order-product/{product_id}', [SupplierController::class, 'orderProduct'])->name('suppliers.orderProduct');
+
+    // =====================
+    // NOTIFICATIONS (admin-only)
+    // =====================
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/read/{product_id}', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::get('api/notifications/count', [NotificationController::class, 'getUnreadCount'])->name('notifications.count');
 
     // =====================
     // MITRA (admin-only)

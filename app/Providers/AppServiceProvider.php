@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Pagination\Paginator;
 use App\Models\Product;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set pagination view untuk Tailwind CSS (gunakan Bootstrap 4 yang kompatibel dengan theme admin)
+        Paginator::defaultView('pagination::bootstrap-4');
+        Paginator::defaultSimpleView('pagination::simple-bootstrap-4');
+
         // Notifikasi produk supplier yang belum dilihat admin
         View::composer('layouts.admin', function ($view) {
             $notif_products = Product::with(['supplier'])

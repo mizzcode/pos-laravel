@@ -13,16 +13,59 @@ class SupplierProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::where('supplier_id', auth()->id())->with('category', 'images');
+
+        // Filter search
         if ($request->filled('q')) {
             $query->where('nama_produk', 'like', '%' . $request->q . '%');
         }
+
+        // Filter kategori
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
+
+        // Filter status
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'belum_tawarkan':
+                    $query->where('notif_admin_seen', 1)->where('is_approved', 0)->where('is_rejected', 0);
+                    break;
+                case 'menunggu':
+                    $query->where('notif_admin_seen', 0)->where('is_approved', 0)->where('is_rejected', 0);
+                    break;
+                case 'diterima':
+                    $query->where('is_approved', 1);
+                    break;
+                case 'ditolak':
+                    $query->where('is_rejected', 1);
+                    break;
+            }
+        }
+
         $products = $query->orderByDesc('created_at')->paginate(10);
         $categories = Category::all();
 
-        return view('supplier.products.product_list', compact('products', 'categories'));
+        // Hitung status count untuk panel
+        $statusCounts = [
+            'belum_tawarkan' => Product::where('supplier_id', auth()->id())
+                ->where('notif_admin_seen', 1)
+                ->where('is_approved', 0)
+                ->where('is_rejected', 0)
+                ->count(),
+            'menunggu' => Product::where('supplier_id', auth()->id())
+                ->where('notif_admin_seen', 0)
+                ->where('is_approved', 0)
+                ->where('is_rejected', 0)
+                ->count(),
+            'diterima' => Product::where('supplier_id', auth()->id())
+                ->where('is_approved', 1)
+                ->count(),
+            'ditolak' => Product::where('supplier_id', auth()->id())
+                ->where('is_rejected', 1)
+                ->count(),
+        ];
+
+        return view('supplier.products.product_list', compact('products', 'categories', 'statusCounts'));
     }
 
     // Form tambah produk supplier
@@ -45,8 +88,23 @@ class SupplierProductController extends Controller
         ]);
         $data = $request->only('nama_produk', 'harga_jual', 'stok', 'category_id', 'deskripsi');
         $data['supplier_id'] = auth()->id();
-        $data['notif_admin_seen'] = 1; // default tidak notif admin
-        $data['is_approved'] = 0;      // butuh approval admin
+        $data['notif_admin_seen'] = 1; // default tidak langsung tawarkan ke admin
+        $data['is_approved'] = 0;      // butuh approval admin  
+        $data['is_rejected'] = 0;      // belum ditolak
+
+        // Untuk supplier, harga_beli tidak diset (null)
+
+        // Generate unique kode_produk untuk supplier
+        $baseCode = 'SUP-' . $data['supplier_id'] . '-' . $data['category_id'] . '-';
+        $counter = 1;
+
+        do {
+            $kode_produk = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $exists = Product::where('kode_produk', $kode_produk)->exists();
+            $counter++;
+        } while ($exists);
+
+        $data['kode_produk'] = $kode_produk;
 
         $product = Product::create($data);
 
@@ -65,6 +123,13 @@ class SupplierProductController extends Controller
     public function offerToStore(Request $request, $id)
     {
         $product = Product::where('supplier_id', auth()->id())->findOrFail($id);
+
+        // Reset status jika sebelumnya ditolak
+        if ($product->is_rejected) {
+            $product->is_rejected = 0;
+            $product->rejection_reason = null;
+        }
+
         $product->notif_admin_seen = 0; // Tampil di notif admin
         $product->save();
 
@@ -90,7 +155,12 @@ class SupplierProductController extends Controller
             'deskripsi'    => 'nullable|string|max:255',
             'foto.*'       => 'nullable|image|max:2048',
         ]);
-        $product->update($request->only('nama_produk', 'harga_jual', 'stok', 'category_id', 'deskripsi'));
+
+        $updateData = $request->only('nama_produk', 'harga_jual', 'stok', 'category_id', 'deskripsi');
+
+        // Untuk supplier, harga_beli tidak diubah (tetap null jika supplier product)
+
+        $product->update($updateData);
 
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $img) {
