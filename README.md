@@ -140,7 +140,7 @@ Setelah menjalankan seeder, Anda dapat login dengan:
 
 ### Admin
 
--   **Email**: admin@gmail.com.com
+-   **Email**: admin@gmail.com
 -   **Password**: password
 
 ### Supplier
