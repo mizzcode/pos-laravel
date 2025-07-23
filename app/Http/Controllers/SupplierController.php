@@ -66,6 +66,18 @@ class SupplierController extends Controller
             $newProduct = $supplierProduct->replicate();
             $newProduct->supplier_id = null;
             $newProduct->stok = $qty;
+
+            // Generate unique kode_produk for the new admin product
+            $baseCode = 'ADM-' . $supplierProduct->category_id . '-';
+            $counter = 1;
+
+            do {
+                $kode_produk = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
+                $exists = \App\Models\Product::where('kode_produk', $kode_produk)->exists();
+                $counter++;
+            } while ($exists);
+
+            $newProduct->kode_produk = $kode_produk;
             $newProduct->save();
 
             // Clone foto juga jika ada

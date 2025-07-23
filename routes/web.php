@@ -85,79 +85,84 @@ Route::get('users/verifikasi', [AuthController::class, 'verifikasi'])->name('use
 Route::post('users/{id}/approve', [AuthController::class, 'approve'])->name('users.approve');
 
 // =====================
-// KATEGORI PRODUK (admin)
+// ADMIN ROUTES (dengan middleware auth)
 // =====================
-Route::resource('categories', CategoryController::class)->except(['show']);
+Route::middleware(['auth'])->group(function () {
+    // =====================
+    // KATEGORI PRODUK (admin)
+    // =====================
+    Route::resource('categories', CategoryController::class)->except(['show']);
 
-// =====================
-// PRODUK (admin)
-// =====================
-// Route untuk gambar produk harus sebelum resource products
-Route::post('products/{productId}/images', [ProductImageController::class, 'store'])->name('products.images.store');
-Route::delete('product-images/{id}', [ProductImageController::class, 'destroy'])->name('products.images.destroy');
+    // =====================
+    // PRODUK (admin)
+    // =====================
+    // Route untuk gambar produk harus sebelum resource products
+    Route::post('products/{productId}/images', [ProductImageController::class, 'store'])->name('products.images.store');
+    Route::delete('product-images/{id}', [ProductImageController::class, 'destroy'])->name('products.images.destroy');
 
-Route::resource('products', ProductController::class);
-Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');
+    Route::resource('products', ProductController::class);
+    Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');
 
-// =====================
-// SUPPLIER (admin-only)
-// =====================
-Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
-Route::get('suppliers/{id}', [SupplierController::class, 'show'])->name('suppliers.show');
-Route::post('suppliers/{id}/verify', [SupplierController::class, 'verify'])->name('suppliers.verify');
-Route::post('suppliers/{id}/nonaktif', [SupplierController::class, 'nonaktif'])->name('suppliers.nonaktif');
-Route::get('suppliers/{id}/products', [SupplierController::class, 'products'])->name('suppliers.products');
-// Route untuk menambah stok produk dari supplier ke toko (ADMIN beli dari supplier)
-Route::post('suppliers/{supplier_id}/order-product/{product_id}', [SupplierController::class, 'orderProduct'])->name('suppliers.orderProduct');
+    // =====================
+    // SUPPLIER (admin-only)
+    // =====================
+    Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+    Route::get('suppliers/{id}', [SupplierController::class, 'show'])->name('suppliers.show');
+    Route::post('suppliers/{id}/verify', [SupplierController::class, 'verify'])->name('suppliers.verify');
+    Route::post('suppliers/{id}/nonaktif', [SupplierController::class, 'nonaktif'])->name('suppliers.nonaktif');
+    Route::get('suppliers/{id}/products', [SupplierController::class, 'products'])->name('suppliers.products');
+    // Route untuk menambah stok produk dari supplier ke toko (ADMIN beli dari supplier)
+    Route::post('suppliers/{supplier_id}/order-product/{product_id}', [SupplierController::class, 'orderProduct'])->name('suppliers.orderProduct');
 
-// =====================
-// MITRA (admin-only)
-// =====================
-Route::resource('mitras', MitraController::class)->only(['index', 'edit', 'update', 'show']);
-Route::post('mitras/{id}/disable', [MitraController::class, 'disable'])->name('mitras.disable');
+    // =====================
+    // MITRA (admin-only)
+    // =====================
+    Route::resource('mitras', MitraController::class)->only(['index', 'edit', 'update', 'show']);
+    Route::post('mitras/{id}/disable', [MitraController::class, 'disable'])->name('mitras.disable');
 
-// =====================
-// CUSTOMER (admin-only)
-// =====================
-Route::resource('customers', CustomerController::class)->only(['index', 'show']);
-Route::post('customers/{id}/disable', [CustomerController::class, 'disable'])->name('customers.disable');
+    // =====================
+    // CUSTOMER (admin-only)
+    // =====================
+    Route::resource('customers', CustomerController::class)->only(['index', 'show']);
+    Route::post('customers/{id}/disable', [CustomerController::class, 'disable'])->name('customers.disable');
 
-// =====================
-// PEMBELIAN KE SUPPLIER (admin)
-// =====================
-Route::resource('purchases', PurchaseController::class)->only(['index', 'create', 'store', 'show']);
+    // =====================
+    // PEMBELIAN KE SUPPLIER (admin)
+    // =====================
+    Route::resource('purchases', PurchaseController::class)->only(['index', 'create', 'store', 'show']);
 
-// =====================
-// PENJUALAN / ORDER (admin/kasir)
-// =====================
-Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'show']);
-Route::post('orders/{midtrans_order_id}/pay', [OrderController::class, 'pay'])->name('orders.pay');
-Route::post('orders/{midtrans_order_id}/kirim', [OrderController::class, 'kirim'])->name('orders.kirim');
-Route::patch('orders/{midtrans_order_id}/ubah-status', [OrderController::class, 'ubahStatus'])->name('orders.ubahStatus');
+    // =====================
+    // PENJUALAN / ORDER (admin/kasir)
+    // =====================
+    Route::resource('orders', OrderController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('orders/{midtrans_order_id}/pay', [OrderController::class, 'pay'])->name('orders.pay');
+    Route::post('orders/{midtrans_order_id}/kirim', [OrderController::class, 'kirim'])->name('orders.kirim');
+    Route::patch('orders/{midtrans_order_id}/ubah-status', [OrderController::class, 'ubahStatus'])->name('orders.ubahStatus');
 
-// =====================
-// PEMBAYARAN (admin)
-// =====================
-Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
-Route::post('payments/{id}/set-lunas', [PaymentController::class, 'setLunas'])->name('payments.setLunas');
-Route::post('payments/create', [PaymentController::class, 'createTransaction'])->name('payments.create');
-Route::post('payments/callback', [PaymentController::class, 'handleCallback'])
-    ->withoutMiddleware([VerifyCsrfToken::class])
-    ->name('payments.callback');
+    // =====================
+    // PEMBAYARAN (admin)
+    // =====================
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::post('payments/{id}/set-lunas', [PaymentController::class, 'setLunas'])->name('payments.setLunas');
+    Route::post('payments/create', [PaymentController::class, 'createTransaction'])->name('payments.create');
+    Route::post('payments/callback', [PaymentController::class, 'handleCallback'])
+        ->withoutMiddleware([VerifyCsrfToken::class])
+        ->name('payments.callback');
 
-// =====================
-// LAPORAN (admin)
-// =====================
-Route::prefix('laporan')->name('laporan.')->group(function () {
-    Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
-    Route::get('produk-terlaris', [LaporanController::class, 'produkTerlaris'])->name('produk_terlaris');
-    Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
+    // =====================
+    // LAPORAN (admin)
+    // =====================
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('penjualan', [LaporanController::class, 'penjualan'])->name('penjualan');
+        Route::get('produk-terlaris', [LaporanController::class, 'produkTerlaris'])->name('produk_terlaris');
+        Route::get('pembelian', [LaporanController::class, 'pembelian'])->name('pembelian');
 
-    // PDF exports
-    Route::get('penjualan/pdf', [LaporanController::class, 'penjualanPdf'])->name('penjualan_pdf');
-    Route::get('pembelian/pdf', [LaporanController::class, 'pembelianPdf'])->name('pembelian_pdf');
-    Route::get('produk-terlaris/pdf', [LaporanController::class, 'produkTerlarisPdf'])->name('produk_terlaris_pdf');
-});
+        // PDF exports
+        Route::get('penjualan/pdf', [LaporanController::class, 'penjualanPdf'])->name('penjualan_pdf');
+        Route::get('pembelian/pdf', [LaporanController::class, 'pembelianPdf'])->name('pembelian_pdf');
+        Route::get('produk-terlaris/pdf', [LaporanController::class, 'produkTerlarisPdf'])->name('produk_terlaris_pdf');
+    });
+}); // End auth middleware group
 
 // =====================
 // SUPPLIER AREA (role supplier saja)

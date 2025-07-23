@@ -53,12 +53,12 @@ class LaporanController extends Controller
         $tglAwal = $request->get('tgl_awal', now()->format('Y-m-01'));
         $tglAkhir = $request->get('tgl_akhir', now()->format('Y-m-d'));
 
-        $purchases = Purchase::whereBetween('created_at', [$tglAwal, $tglAkhir])
+        $purchases = Purchase::whereBetween('tanggal_beli', [$tglAwal, $tglAkhir])
             ->with('supplier')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('tanggal_beli', 'desc')
             ->get();
 
-        $total = $purchases->sum('total_beli'); // Perbaiki dari 'total_harga' ke 'total_beli'
+        $total = $purchases->sum('total_beli');
 
         return view('admin.laporan.pembelian', compact('purchases', 'tglAwal', 'tglAkhir', 'total'));
     }
@@ -101,11 +101,11 @@ class LaporanController extends Controller
     {
         $tglAwal = $request->get('tgl_awal', now()->format('Y-m-01'));
         $tglAkhir = $request->get('tgl_akhir', now()->format('Y-m-d'));
-        
+
         $produkTerlaris = OrderItem::select('product_id', DB::raw('SUM(qty) as total_terjual'))
             ->whereHas('order', function ($q) use ($tglAwal, $tglAkhir) {
                 $q->where('status_order', 'selesai')
-                  ->whereBetween('tanggal_order', [$tglAwal, $tglAkhir]);
+                    ->whereBetween('tanggal_order', [$tglAwal, $tglAkhir]);
             })
             ->groupBy('product_id')
             ->orderByDesc('total_terjual')

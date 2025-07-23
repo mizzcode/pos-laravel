@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade');
+            $table->foreignId('supplier_id')->constrained('users')->onDelete('cascade');
             $table->date('tanggal_beli');
             $table->decimal('total_beli', 15, 2);
             $table->string('status_bayar')->default('pending'); // pending, paid, cancelled

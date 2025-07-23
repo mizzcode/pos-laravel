@@ -52,6 +52,12 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+
+        // Check if user is authenticated
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
         $request->validate([
             'category_id' => 'required',
             'kode_produk' => 'required|unique:products,kode_produk',
@@ -116,7 +122,7 @@ class ProductController extends Controller
         // Enhanced validation with clear error messages
         $validator = Validator::make($request->all(), [
             'nama_produk' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string', // Changed from required to nullable
+            'deskripsi' => 'nullable|string',
             'harga_jual' => 'required|numeric|min:0',
             'harga_beli' => 'nullable|numeric|min:0',
             'stok' => 'required|integer|min:0',
@@ -290,6 +296,15 @@ class ProductController extends Controller
             $newProduct = $supplierProduct->replicate();
             $newProduct->supplier_id = null;
             $newProduct->stok = $request->qty;
+
+            // Generate kode produk baru untuk produk internal (tidak boleh sama dengan supplier)
+            $newProduct->kode_produk = 'INT-' . time() . '-' . rand(100, 999);
+
+            // Pastikan kode produk unik
+            while (Product::where('kode_produk', $newProduct->kode_produk)->exists()) {
+                $newProduct->kode_produk = 'INT-' . time() . '-' . rand(100, 999);
+            }
+
             $newProduct->save();
 
             // Jika ada foto, copy juga (jika pakai relasi images)
