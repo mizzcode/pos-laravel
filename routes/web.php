@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     // Route untuk gambar produk harus sebelum resource products
     Route::post('products/{productId}/images', [ProductImageController::class, 'store'])->name('products.images.store');
     Route::delete('product-images/{id}', [ProductImageController::class, 'destroy'])->name('products.images.destroy');
+    Route::post('product-images/{id}/set-default', [ProductImageController::class, 'setDefault'])->name('products.images.setDefault');
 
     Route::resource('products', ProductController::class);
     Route::post('products/receive-from-supplier', [ProductController::class, 'receiveFromSupplier'])->name('products.receiveFromSupplier');

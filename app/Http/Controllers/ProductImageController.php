@@ -67,4 +67,24 @@ class ProductImageController extends Controller
         }
         abort(403, 'Akses ditolak!');
     }
+
+    public function setDefault($id)
+    {
+        $img = ProductImage::findOrFail($id);
+        $user = auth()->user();
+        $product = $img->product;
+
+        // Check permission
+        if ($user->role === 'admin' || ($user->role === 'supplier' && $product->supplier_id == $user->id)) {
+            // Set all images of this product to not default
+            ProductImage::where('product_id', $product->id)
+                ->update(['is_default' => false]);
+
+            // Set this image as default
+            $img->update(['is_default' => true]);
+
+            return back()->with('success', 'Foto utama berhasil diubah!');
+        }
+        abort(403, 'Akses ditolak!');
+    }
 }

@@ -242,7 +242,7 @@ class ProductController extends Controller
 
             Log::info('=== UPDATE PRODUCT SUCCESS ===');
 
-            return redirect()->route('products.index')
+            return redirect()->route('products.edit', $product->id)
                 ->with('success', 'Produk berhasil diperbarui!');
         } catch (\Exception $e) {
             Log::error('=== UPDATE PRODUCT ERROR ===', [

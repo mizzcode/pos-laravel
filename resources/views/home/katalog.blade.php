@@ -73,19 +73,22 @@
                     {{-- GAMBAR PRODUK --}}
                     @if ($p->images && count($p->images) > 0)
                         @php
-                            $firstImage = $p->images->first();
+                            // Cari gambar default terlebih dahulu, kalau tidak ada ambil yang pertama
+                            $defaultImage = $p->images->where('is_default', true)->first();
+                            $selectedImage = $defaultImage ?: $p->images->first();
+
                             $defaultPlaceholder =
                                 'https://placehold.co/500x500/95A5A6/FFFFFF?text=' . urlencode($p->nama_produk);
 
                             // Prioritas: cek storage lokal dulu, kalau tidak ada gunakan URL eksternal
-                            if (str_starts_with($firstImage->file_path, 'http')) {
+                            if (str_starts_with($selectedImage->file_path, 'http')) {
                                 // Jika sudah URL eksternal, gunakan langsung
-                                $imageUrl = $firstImage->file_path;
+                                $imageUrl = $selectedImage->file_path;
                             } else {
                                 // Cek apakah file ada di storage, kalau tidak ada gunakan placeholder
-                                $localPath = public_path('storage/' . $firstImage->file_path);
+                                $localPath = public_path('storage/' . $selectedImage->file_path);
                                 $imageUrl = file_exists($localPath)
-                                    ? asset('storage/' . $firstImage->file_path)
+                                    ? asset('storage/' . $selectedImage->file_path)
                                     : $defaultPlaceholder;
                             }
                         @endphp
