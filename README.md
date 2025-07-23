@@ -123,7 +123,9 @@ Edit file `.env` dan tambahkan konfigurasi Midtrans:
 ```env
 MIDTRANS_SERVER_KEY=your_server_key
 MIDTRANS_CLIENT_KEY=your_client_key
-MIDTRANS_ENVIRONMENT=sandbox # atau production
+MIDTRANS_IS_PRODUCTION=false
+MIDTRANS_IS_SANITIZED=true
+MIDTRANS_IS_3DS=true
 ```
 
 ### File Storage
@@ -140,7 +142,7 @@ Setelah menjalankan seeder, Anda dapat login dengan:
 
 ### Admin
 
--   **Email**: admin@gmail.com.com
+-   **Email**: admin@gmail.com
 -   **Password**: password
 
 ### Supplier
